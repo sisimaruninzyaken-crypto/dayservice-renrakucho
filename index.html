@@ -198,6 +198,9 @@ body {
 .btn-secondary { background: var(--border); color: var(--text2); }
 .btn-secondary:hover { background: #d8d0c6; }
 .btn-danger { background: #fde8e8; color: var(--danger); border: 1px solid #f0b0b0; }
+.btn-family { background: var(--accent2); color: white; }
+.btn-family:hover { background: #a85530; transform: translateY(-1px); }
+.btn-family:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .btn-danger:hover { background: #f8d0d0; }
 .btn-full { width: 100%; justify-content: center; }
 
@@ -535,6 +538,7 @@ body {
       <div class="result-box" id="result-text"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <button class="btn btn-primary" onclick="saveRecord()">💾 ケースとして保存</button>
+        <button class="btn btn-family" id="btn-send-family" onclick="sendToFamily()">📤 家族に送信</button>
         <button class="btn btn-secondary" onclick="resetForm()">🔄 新しい記録</button>
       </div>
     </div>
@@ -908,6 +912,35 @@ function closeTenkey() {
   tkTarget = null; tkInput = '';
 }
 
+
+// ============ エックスサーバー連携 ============
+const XSERVER_URL = 'https://sisimaru81.com/renrakucho';
+
+async function sendToFamily() {
+  if (!window._currentRecord) { showToast("先に連絡帳を生成してください"); return; }
+  const btn = document.getElementById('btn-send-family');
+  btn.disabled = true;
+  btn.textContent = "送信中…";
+  try {
+    const res = await fetch(XSERVER_URL + '/receive.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(window._currentRecord)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.success) {
+      showToast("✅ 家族に送信しました");
+      btn.textContent = "✅ 送信済み";
+    } else {
+      throw new Error(data.message || '送信に失敗しました');
+    }
+  } catch (e) {
+    showToast("❌ 送信エラー: " + e.message);
+    btn.textContent = "📤 家族に送信";
+    btn.disabled = false;
+  }
+}
 
 // ============ Google Drive 連携 ============
 const CLIENT_ID = '727543696675-jj10gd19643i225c8s0lf22q64mgi9j5.apps.googleusercontent.com';
