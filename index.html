@@ -537,7 +537,6 @@ body {
       </div>
       <div class="result-box" id="result-text"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <button class="btn btn-primary" onclick="saveRecord()">💾 ケースとして保存</button>
         <button class="btn btn-family" id="btn-send-family" onclick="sendToFamily()">📤 家族に送信</button>
         <button class="btn btn-secondary" onclick="resetForm()">🔄 新しい記録</button>
       </div>
@@ -775,7 +774,10 @@ function generate() {
   document.getElementById("result-wrap").style.display = "block";
   document.getElementById("result-wrap").scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  window._currentRecord = { userId: user.id, userName: user.name, date: today, text, vital, meal };
+  window._currentRecord = { userId: user.id, userName: user.name, date: today, text, vital, meal, _saved: true };
+  records.push(window._currentRecord);
+  if (gdriveConnected) setTimeout(syncToDrive, 500);
+  showToast("💾 自動保存しました");
 }
 
 function saveRecord() {
