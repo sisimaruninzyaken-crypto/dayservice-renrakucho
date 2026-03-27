@@ -918,6 +918,14 @@ const XSERVER_URL = 'https://sisimaru81.com/renrakucho';
 
 async function sendToFamily() {
   if (!window._currentRecord) { showToast("先に連絡帳を生成してください"); return; }
+
+  // 自動保存（未保存の場合のみ）
+  if (!window._currentRecord._saved) {
+    records.push(window._currentRecord);
+    window._currentRecord._saved = true;
+    if (gdriveConnected) setTimeout(syncToDrive, 500);
+  }
+
   const btn = document.getElementById('btn-send-family');
   btn.disabled = true;
   btn.textContent = "送信中…";
@@ -930,7 +938,7 @@ async function sendToFamily() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.success) {
-      showToast("✅ 家族に送信しました");
+      showToast("✅ 保存＆家族に送信しました");
       btn.textContent = "✅ 送信済み";
     } else {
       throw new Error(data.message || '送信に失敗しました');
