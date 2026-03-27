@@ -441,6 +441,7 @@ body {
 </div>
 
 <div class="nav">
+  <button class="nav-tab" onclick="switchTab('attendance')">📅 本日の出席</button>
   <button class="nav-tab active" onclick="switchTab('input')">📝 記録入力</button>
   <button class="nav-tab" onclick="switchTab('records')">📋 ケース一覧</button>
   <button class="nav-tab" onclick="switchTab('users')">👥 利用者管理</button>
@@ -454,6 +455,19 @@ body {
 </div>
 
 <div class="main">
+
+  <!-- 本日の出席 -->
+  <div id="tab-attendance" class="panel">
+    <div class="card">
+      <div class="card-title">📅 本日の出席者を選択</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="selectAllAttendance(true)">全員選択</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="selectAllAttendance(false)">全員解除</button>
+        <span style="margin-left:auto;font-size:13px;color:var(--text2);align-self:center;" id="attendance-count">0名選択中</span>
+      </div>
+      <div id="attendance-list"></div>
+    </div>
+  </div>
 
   <!-- 記録入力 -->
   <div id="tab-input" class="panel active">
@@ -612,6 +626,7 @@ let users = [
 let records = [];
 let nextUserId = 4;
 let selectedRecordIdx = null;
+let todayAttendees = new Set();
 
 // Init
 document.getElementById("headerDate").textContent = new Date().toLocaleDateString("ja-JP", { year:"numeric", month:"long", day:"numeric", weekday:"short" });
@@ -625,11 +640,12 @@ function updMeal(meal, val) {
 
 function switchTab(tab) {
   document.querySelectorAll(".nav-tab").forEach((t, i) => {
-    const names = ["input","records","users"];
+    const names = ["attendance","input","records","users"];
     t.classList.toggle("active", names[i] === tab);
   });
   document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
   document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "attendance") renderAttendance();
   if (tab === "records") renderRecords();
   if (tab === "users") renderUsers();
 }
@@ -640,11 +656,44 @@ function renderUserSelects() {
   const cur = sel.value;
   sel.innerHTML = '<option value="">-- 利用者を選択 --</option>';
   flt.innerHTML = '<option value="">全員</option>';
-  users.forEach(u => {
+  const inputList = todayAttendees.size > 0 ? users.filter(u => todayAttendees.has(u.id)) : users;
+  inputList.forEach(u => {
     sel.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+  });
+  users.forEach(u => {
     flt.innerHTML += `<option value="${u.id}">${u.name}</option>`;
   });
   if (cur) sel.value = cur;
+}
+
+function renderAttendance() {
+  const el = document.getElementById("attendance-list");
+  if (!users.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">利用者が登録されていません</div></div>'; return; }
+  el.innerHTML = users.map(u => `
+    <div class="user-item" onclick="toggleAttendance(${u.id})" style="cursor:pointer;">
+      <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${todayAttendees.has(u.id) ? 'var(--accent)' : 'var(--border)'};background:${todayAttendees.has(u.id) ? 'var(--accent)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${todayAttendees.has(u.id) ? '<span style="color:white;font-size:14px;">✓</span>' : ''}
+      </div>
+      <div class="user-info">
+        <div class="user-name">${u.name}</div>
+        <div class="user-meta">${u.age}歳　${u.note || "備考なし"}</div>
+      </div>
+    </div>`).join("");
+  document.getElementById("attendance-count").textContent = `${todayAttendees.size}名選択中`;
+}
+
+function toggleAttendance(userId) {
+  if (todayAttendees.has(userId)) todayAttendees.delete(userId);
+  else todayAttendees.add(userId);
+  renderAttendance();
+  renderUserSelects();
+}
+
+function selectAllAttendance(all) {
+  if (all) users.forEach(u => todayAttendees.add(u.id));
+  else todayAttendees.clear();
+  renderAttendance();
+  renderUserSelects();
 }
 
 function renderUsers() {
