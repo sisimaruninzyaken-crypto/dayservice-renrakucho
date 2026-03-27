@@ -1,0 +1,22 @@
+{
+  "name": "デイサービス連絡帳",
+  "short_name": "連絡帳",
+  "description": "デイサービス利用者の日々の記録と連絡帳を管理するアプリ",
+  "start_url": "/dayservice-renrakucho/",
+  "display": "standalone",
+  "background_color": "#f2efe9",
+  "theme_color": "#3a6b5c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/3a6b5c/ffffff?text=連",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512/3a6b5c/ffffff?text=連",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
