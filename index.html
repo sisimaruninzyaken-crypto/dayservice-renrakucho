@@ -551,6 +551,11 @@ body {
 
   <!-- ケース一覧 -->
   <div id="tab-records" class="panel">
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-family btn-full" id="btn-bulk-send" onclick="bulkSendToday()" style="padding:12px;">
+        📤 本日の利用者に一括送信
+      </button>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div style="font-size:14px;color:var(--text2);" id="record-count"></div>
       <select id="filter-user" onchange="renderRecords()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Noto Sans JP',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;">
@@ -946,6 +951,42 @@ async function sendToFamily() {
   } catch (e) {
     showToast("❌ 送信エラー: " + e.message);
     btn.textContent = "📤 家族に送信";
+    btn.disabled = false;
+  }
+}
+
+async function bulkSendToday() {
+  const today = new Date().toLocaleDateString("ja-JP", { year:"numeric", month:"long", day:"numeric", weekday:"short" });
+  const todayRecords = records.filter(r => r.date === today);
+  if (todayRecords.length === 0) {
+    showToast("本日の記録がありません");
+    return;
+  }
+  const btn = document.getElementById('btn-bulk-send');
+  btn.disabled = true;
+  btn.textContent = `送信中… 0 / ${todayRecords.length}`;
+  let ok = 0, fail = 0;
+  for (const rec of todayRecords) {
+    try {
+      const res = await fetch(XSERVER_URL + '/receive.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rec)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.success) ok++; else fail++;
+    } catch (e) {
+      fail++;
+    }
+    btn.textContent = `送信中… ${ok + fail} / ${todayRecords.length}`;
+  }
+  if (fail === 0) {
+    showToast(`✅ ${ok}名分を送信しました`);
+    btn.textContent = `✅ ${ok}名に送信済み`;
+  } else {
+    showToast(`⚠️ ${ok}名成功・${fail}名失敗`);
+    btn.textContent = `📤 本日の利用者に一括送信`;
     btn.disabled = false;
   }
 }
