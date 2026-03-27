@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デイサービス連絡帳</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;700&display=swap');
+
+:root {
+  --bg: #f2efe9;
+  --surface: #ffffff;
+  --surface2: #f8f6f2;
+  --border: #e5dfd6;
+  --accent: #3a6b5c;
+  --accent-dark: #264d41;
+  --accent-light: #dff0eb;
+  --accent2: #c96a3a;
+  --text: #1e1a16;
+  --text2: #5a534a;
+  --text3: #9a9088;
+  --ok: #3a7a52;
+  --warn: #c96a3a;
+  --danger: #b83030;
+  --r: 12px;
+  --r-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--accent);
+  color: white;
+  padding: 0 20px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 12px rgba(58,107,92,0.25);
+}
+.header-logo {
+  font-family: 'Shippori Mincho', serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  flex: 1;
+}
+.header-date { font-size: 12px; opacity: 0.8; }
+
+/* Nav tabs */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text3);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Main */
+.main { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* User selector */
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.user-select {
+  flex: 1;
+  min-width: 160px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+.user-select:focus { border-color: var(--accent); }
+
+/* Form */
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface2);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.field textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* Meal slider */
+.meal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.meal-label { font-size: 13px; color: var(--text2); width: 24px; font-weight: 500; }
+.meal-slider { flex: 1; -webkit-appearance: none; height: 6px; border-radius: 3px; background: var(--border); outline: none; cursor: pointer; }
+.meal-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+.meal-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; }
+.meal-pct { font-size: 13px; font-weight: 700; color: var(--accent); width: 38px; text-align: right; }
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+.btn-secondary { background: var(--border); color: var(--text2); }
+.btn-secondary:hover { background: #d8d0c6; }
+.btn-danger { background: #fde8e8; color: var(--danger); border: 1px solid #f0b0b0; }
+.btn-danger:hover { background: #f8d0d0; }
+.btn-full { width: 100%; justify-content: center; }
+
+/* Result box */
+.result-box {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--text);
+  white-space: pre-wrap;
+  margin: 14px 0;
+  font-family: 'Shippori Mincho', serif;
+}
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.result-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* Record list */
+.record-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.record-item:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(58,107,92,0.1); }
+.record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.record-name { font-weight: 700; font-size: 15px; }
+.record-date { font-size: 12px; color: var(--text3); }
+.record-preview { font-size: 13px; color: var(--text2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.record-badges { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+.badge-ok { background: #e0f5e8; color: #1f6e3a; }
+.badge-warn { background: #fdf0e0; color: #8a4a10; }
+.badge-normal { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+/* User management */
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  margin-bottom: 8px;
+  background: var(--surface);
+}
+.user-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-info { flex: 1; }
+.user-name { font-weight: 700; font-size: 14px; }
+.user-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* Add user form */
+.add-user-form {
+  background: var(--surface2);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-top: 8px;
+  display: none;
+}
+.add-user-form.open { display: block; }
+
+/* Empty */
+.empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 14px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(58,107,92,0.3);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Detail modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 300;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: var(--r) var(--r) 0 0;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-family: 'Shippori Mincho', serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.modal-date { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+.modal-body { font-size: 14px; line-height: 1.9; color: var(--text); white-space: pre-wrap; font-family: 'Shippori Mincho', serif; }
+.modal-close { float: right; font-size: 20px; color: var(--text3); cursor: pointer; background: none; border: none; }
+
+@media (min-width: 600px) {
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: var(--r); max-height: 70vh; }
+}
+@media (max-width: 480px) {
+  .grid3 { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+
+/* Vital grid tenkey */
+.vital-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.vital-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.vital-btn:active { background: var(--accent-light); border-color: var(--accent); transform: scale(0.97); }
+.vital-icon { font-size: 20px; margin-bottom: 4px; }
+.vital-label { font-size: 11px; color: var(--text3); font-weight: 500; margin-bottom: 4px; }
+.vital-val { font-size: 13px; font-weight: 700; color: var(--accent); }
+.vital-val.filled { color: var(--text); }
+
+/* Tenkey modal */
+.tk-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 500;
+  align-items: flex-end; justify-content: center;
+}
+.tk-overlay.open { display: flex; }
+.tk-modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 32px;
+  width: 100%; max-width: 400px;
+}
+.tk-title { font-size: 14px; font-weight: 700; color: var(--text2); margin-bottom: 8px; text-align: center; }
+.tk-display {
+  font-size: 36px; font-weight: 700; color: var(--text);
+  text-align: center; letter-spacing: 0.04em;
+  background: var(--surface2); border-radius: var(--r);
+  padding: 12px; margin-bottom: 16px; min-height: 66px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tk-display .tk-unit { font-size: 16px; color: var(--text3); margin-left: 6px; font-weight: 400; }
+.tk-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tk-key {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 8px;
+  font-size: 22px; font-weight: 700; color: var(--text);
+  text-align: center; cursor: pointer;
+  transition: all 0.1s; font-family: 'Noto Sans JP', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.tk-key:active { background: var(--border); transform: scale(0.95); }
+.tk-key.tk-del { font-size: 18px; color: var(--text3); }
+.tk-key.tk-ok { background: var(--accent); color: white; border-color: var(--accent); font-size: 16px; }
+.tk-key.tk-ok:active { background: var(--accent-dark); }
+.tk-key.tk-dot { font-size: 20px; }
+
+
+/* Google Drive sync */
+.gdrive-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gdrive-status {
+  font-size: 12px;
+  color: var(--text3);
+  flex: 1;
+}
+.gdrive-status.connected { color: var(--ok); font-weight: 500; }
+.gdrive-status.syncing { color: var(--warn); }
+.btn-gdrive {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+.btn-gdrive:hover { background: var(--border); }
+.btn-gdrive.connected { border-color: var(--ok); color: var(--ok); background: #f0faf5; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:20px;">🌿</span>
+  <div class="header-logo">デイサービス連絡帳</div>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="switchTab('input')">📝 記録入力</button>
+  <button class="nav-tab" onclick="switchTab('records')">📋 ケース一覧</button>
+  <button class="nav-tab" onclick="switchTab('users')">👥 利用者管理</button>
+</div>
+
+<div class="gdrive-bar">
+  <span style="font-size:14px;">☁️</span>
+  <span class="gdrive-status" id="gdrive-status">Google Driveに未接続</span>
+  <button class="btn-gdrive" id="gdrive-btn" onclick="gdriveLogin()">🔗 Google Driveに接続</button>
+  <button class="btn-gdrive" id="gdrive-sync-btn" onclick="syncToDrive()" style="display:none;">🔄 同期</button>
+</div>
+
+<div class="main">
+
+  <!-- 記録入力 -->
+  <div id="tab-input" class="panel active">
+
+    <div class="card">
+      <div class="card-title">👤 利用者</div>
+      <div class="user-row">
+        <select class="user-select" id="sel-user">
+          <option value="">-- 利用者を選択 --</option>
+        </select>
+        <div style="font-size:12px;color:var(--text3);" id="user-info-sub"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❤️ バイタルサイン <span style="font-size:11px;font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;">タップして入力</span></div>
+      <div class="vital-grid">
+        <div class="vital-btn" onclick="openTenkey('v-temp','体温','℃',true)">
+          <div class="vital-icon">🌡️</div><div class="vital-label">体温</div>
+          <div class="vital-val" id="v-temp-disp">--</div>
+          <input type="hidden" id="v-temp">
+        </div>
+        <div class="vital-btn" onclick="openTenkey('v-bps','血圧（上）','mmHg',false)">
+          <div class="vital-icon">💓</div><div class="vital-label">血圧 上</div>
+          <div class="vital-val" id="v-bps-disp">--</div>
+          <input type="hidden" id="v-bps">
+        </div>
+        <div class="vital-btn" onclick="openTenkey('v-bpd','血圧（下）','mmHg',false)">
+          <div class="vital-icon">💓</div><div class="vital-label">血圧 下</div>
+          <div class="vital-val" id="v-bpd-disp">--</div>
+          <input type="hidden" id="v-bpd">
+        </div>
+        <div class="vital-btn" onclick="openTenkey('v-pulse','脈拍','回/分',false)">
+          <div class="vital-icon">💗</div><div class="vital-label">脈拍</div>
+          <div class="vital-val" id="v-pulse-disp">--</div>
+          <input type="hidden" id="v-pulse">
+        </div>
+        <div class="vital-btn" onclick="openTenkey('v-spo2','SpO₂','%',false)">
+          <div class="vital-icon">🫁</div><div class="vital-label">SpO₂</div>
+          <div class="vital-val" id="v-spo2-disp">--</div>
+          <input type="hidden" id="v-spo2">
+        </div>
+        <div class="vital-btn" onclick="openTenkey('v-weight','体重','kg',true)">
+          <div class="vital-icon">⚖️</div><div class="vital-label">体重</div>
+          <div class="vital-val" id="v-weight-disp">--</div>
+          <input type="hidden" id="v-weight">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🍱 食事・水分</div>
+      <div class="meal-row"><span class="meal-label">朝</span><input class="meal-slider" type="range" id="m-morning" min="0" max="100" step="10" value="80" oninput="updMeal('morning',this.value)"><span class="meal-pct" id="mp-morning">80%</span></div>
+      <div class="meal-row"><span class="meal-label">昼</span><input class="meal-slider" type="range" id="m-noon" min="0" max="100" step="10" value="100" oninput="updMeal('noon',this.value)"><span class="meal-pct" id="mp-noon">100%</span></div>
+      <div class="meal-row"><span class="meal-label">夕</span><input class="meal-slider" type="range" id="m-evening" min="0" max="100" step="10" value="80" oninput="updMeal('evening',this.value)"><span class="meal-pct" id="mp-evening">80%</span></div>
+      <div class="field" style="margin-top:10px;"><label>水分摂取量（ml）</label><input type="number" id="v-water" placeholder="800"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🚻 排泄・活動・特記</div>
+      <div class="grid2">
+        <div class="field"><label>排尿（回数）</label><input type="number" id="v-urine" placeholder="5"></div>
+        <div class="field"><label>排便</label>
+          <select id="v-stool">
+            <option value="">選択</option>
+            <option value="あり（普通）">あり（普通）</option>
+            <option value="あり（軟便）">あり（軟便）</option>
+            <option value="あり（硬便）">あり（硬便）</option>
+            <option value="なし">なし</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>今日の活動・レク内容</label><input type="text" id="v-activity" placeholder="例：体操、カラオケ、塗り絵"></div>
+      <div class="field"><label>気になること・特記事項</label><textarea id="v-notes" placeholder="例：午後から眠そうにしていた、右膝が痛いとおっしゃっていた、など"></textarea></div>
+    </div>
+
+    <div id="result-wrap" style="display:none;">
+      <div class="result-header">
+        <span class="result-label">✅ 生成された連絡帳</span>
+        <button class="btn btn-secondary" style="font-size:12px;padding:5px 12px;" onclick="copyResult()">📋 コピー</button>
+      </div>
+      <div class="result-box" id="result-text"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button class="btn btn-primary" onclick="saveRecord()">💾 ケースとして保存</button>
+        <button class="btn btn-secondary" onclick="resetForm()">🔄 新しい記録</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="generate()" style="padding:14px;">
+      📝 連絡帳を自動生成する
+    </button>
+
+  </div>
+
+  <!-- ケース一覧 -->
+  <div id="tab-records" class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:14px;color:var(--text2);" id="record-count"></div>
+      <select id="filter-user" onchange="renderRecords()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Noto Sans JP',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;">
+        <option value="">全員</option>
+      </select>
+    </div>
+    <div id="records-list"></div>
+  </div>
+
+  <!-- 利用者管理 -->
+  <div id="tab-users" class="panel">
+    <div class="card">
+      <div class="card-title">👥 登録利用者</div>
+      <div id="users-list"></div>
+      <button class="btn btn-secondary" style="margin-top:10px;width:100%;justify-content:center;" onclick="toggleAddForm()">＋ 利用者を追加する</button>
+      <div class="add-user-form" id="add-user-form">
+        <div class="grid2">
+          <div class="field"><label>お名前</label><input type="text" id="new-name" placeholder="例：山田 花子"></div>
+          <div class="field"><label>年齢</label><input type="number" id="new-age" placeholder="例：82"></div>
+        </div>
+        <div class="field"><label>備考（持病・注意事項など）</label><input type="text" id="new-note" placeholder="例：高血圧・糖尿病"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn btn-primary" onclick="addUser()">追加する</button>
+          <button class="btn btn-secondary" onclick="toggleAddForm()">キャンセル</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-date" id="modal-date"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-danger" onclick="deleteRecord()" style="font-size:13px;">🗑 このケースを削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// State
+let users = [
+  { id: 1, name: "田中 幸子", age: 78, note: "高血圧・要注意" },
+  { id: 2, name: "佐藤 正雄", age: 82, note: "糖尿病・車椅子利用" },
+  { id: 3, name: "鈴木 美枝", age: 75, note: "特になし" }
+];
+let records = [];
+let nextUserId = 4;
+let selectedRecordIdx = null;
+
+// Init
+document.getElementById("headerDate").textContent = new Date().toLocaleDateString("ja-JP", { year:"numeric", month:"long", day:"numeric", weekday:"short" });
+renderUserSelects();
+renderUsers();
+renderRecords();
+
+function updMeal(meal, val) {
+  document.getElementById("mp-" + meal).textContent = val + "%";
+}
+
+function switchTab(tab) {
+  document.querySelectorAll(".nav-tab").forEach((t, i) => {
+    const names = ["input","records","users"];
+    t.classList.toggle("active", names[i] === tab);
+  });
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "records") renderRecords();
+  if (tab === "users") renderUsers();
+}
+
+function renderUserSelects() {
+  const sel = document.getElementById("sel-user");
+  const flt = document.getElementById("filter-user");
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- 利用者を選択 --</option>';
+  flt.innerHTML = '<option value="">全員</option>';
+  users.forEach(u => {
+    sel.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+    flt.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+  });
+  if (cur) sel.value = cur;
+}
+
+function renderUsers() {
+  const el = document.getElementById("users-list");
+  if (!users.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">利用者が登録されていません</div></div>'; return; }
+  el.innerHTML = users.map((u, i) => `
+    <div class="user-item">
+      <div class="user-avatar">${u.name.charAt(0)}</div>
+      <div class="user-info">
+        <div class="user-name">${u.name}</div>
+        <div class="user-meta">${u.age}歳　${u.note || "備考なし"}</div>
+      </div>
+      <button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="removeUser(${i})">削除</button>
+    </div>`).join("");
+}
+
+function renderRecords() {
+  const filter = document.getElementById("filter-user").value;
+  const filtered = filter ? records.filter(r => String(r.userId) === filter) : records;
+  document.getElementById("record-count").textContent = `${filtered.length}件のケース`;
+  const el = document.getElementById("records-list");
+  if (!filtered.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">まだケースが保存されていません</div></div>';
+    return;
+  }
+  el.innerHTML = [...filtered].reverse().map((r, ri) => {
+    const realIdx = records.length - 1 - ri;
+    const badges = [];
+    if (r.vital.temp && parseFloat(r.vital.temp) >= 37.5) badges.push(`<span class="badge badge-warn">発熱</span>`);
+    if (r.vital.bps && parseInt(r.vital.bps) >= 160) badges.push(`<span class="badge badge-warn">血圧高</span>`);
+    if (r.meal.morning < 50 || r.meal.noon < 50) badges.push(`<span class="badge badge-warn">食事少</span>`);
+    if (!badges.length) badges.push(`<span class="badge badge-ok">異常なし</span>`);
+    return `
+    <div class="record-item" onclick="openRecord(${realIdx})">
+      <div class="record-header">
+        <div class="record-name">${r.userName}</div>
+        <div class="record-date">${r.date}</div>
+      </div>
+      <div class="record-preview">${r.text}</div>
+      <div class="record-badges">${badges.join("")}</div>
+    </div>`;
+  }).join("");
+}
+
+function generate() {
+  const userId = document.getElementById("sel-user").value;
+  if (!userId) { showToast("利用者を選択してください"); return; }
+  const user = users.find(u => u.id === parseInt(userId));
+  const vital = {
+    temp: document.getElementById("v-temp").value,
+    bps: document.getElementById("v-bps").value,
+    bpd: document.getElementById("v-bpd").value,
+    pulse: document.getElementById("v-pulse").value,
+    spo2: document.getElementById("v-spo2").value,
+    weight: document.getElementById("v-weight").value,
+  };
+  const meal = {
+    morning: parseInt(document.getElementById("m-morning").value),
+    noon: parseInt(document.getElementById("m-noon").value),
+    evening: parseInt(document.getElementById("m-evening").value),
+  };
+  const water = document.getElementById("v-water").value;
+  const urine = document.getElementById("v-urine").value;
+  const stool = document.getElementById("v-stool").value;
+  const activity = document.getElementById("v-activity").value;
+  const notes = document.getElementById("v-notes").value;
+
+  const today = new Date().toLocaleDateString("ja-JP", { year:"numeric", month:"long", day:"numeric", weekday:"short" });
+
+  let text = `${today}\n${user.name} 様\n\n`;
+  text += `本日もデイサービスをご利用いただきありがとうございました。\n`;
+  text += `${user.name}様の本日の様子をお伝えいたします。\n\n`;
+
+  // Vital
+  if (vital.temp || vital.bps) {
+    text += `【バイタルサイン】\n`;
+    if (vital.temp) {
+      const t = parseFloat(vital.temp);
+      text += `体温は${vital.temp}℃で`;
+      text += t >= 37.5 ? `やや高めでした。引き続き様子を見てまいります。` : `平熱でした。`;
+      text += `\n`;
+    }
+    if (vital.bps && vital.bpd) {
+      const s = parseInt(vital.bps);
+      text += `血圧は${vital.bps}/${vital.bpd}mmHgで`;
+      text += s >= 160 ? `やや高めでしたので、水分補給と安静を促しました。` : s <= 90 ? `低めでしたので、しばらく横になっていただきました。` : `安定しておりました。`;
+      text += `\n`;
+    }
+    if (vital.pulse) text += `脈拍は${vital.pulse}回/分でした。\n`;
+    if (vital.spo2) text += `SpO₂は${vital.spo2}%でした。\n`;
+    if (vital.weight) text += `体重は${vital.weight}kgでした。\n`;
+    text += `\n`;
+  }
+
+  // Meal
+  text += `【お食事・水分】\n`;
+  const mealDesc = (pct) => pct >= 90 ? "完食" : pct >= 70 ? "よく召し上がりました" : pct >= 50 ? "半分程度召し上がりました" : "あまり召し上がれませんでした";
+  text += `朝食は${meal.morning}%（${mealDesc(meal.morning)}）、`;
+  text += `昼食は${meal.noon}%（${mealDesc(meal.noon)}）、`;
+  text += `夕食は${meal.evening}%（${mealDesc(meal.evening)}）でした。\n`;
+  if (water) text += `水分は${water}ml摂取されました。\n`;
+  text += `\n`;
+
+  // Excretion
+  if (urine || stool) {
+    text += `【排泄】\n`;
+    if (urine) text += `排尿は${urine}回ありました。\n`;
+    if (stool) text += `排便は${stool}でした。\n`;
+    text += `\n`;
+  }
+
+  // Activity
+  if (activity) {
+    text += `【活動・レクリエーション】\n`;
+    text += `本日は${activity}に参加されました。`;
+    text += `積極的に取り組んでいただき、楽しそうな様子でした。\n\n`;
+  }
+
+  // Notes
+  if (notes) {
+    text += `【特記事項】\n${notes}\n\n`;
+  }
+
+  text += `何かご不明な点がございましたら、お気軽にスタッフまでお申し付けください。\n今後ともどうぞよろしくお願いいたします。`;
+
+  document.getElementById("result-text").textContent = text;
+  document.getElementById("result-wrap").style.display = "block";
+  document.getElementById("result-wrap").scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  window._currentRecord = { userId: user.id, userName: user.name, date: today, text, vital, meal };
+}
+
+function saveRecord() {
+  if (!window._currentRecord) return;
+  records.push(window._currentRecord);
+  showToast("💾 ケースを保存しました");
+  if (gdriveConnected) setTimeout(syncToDrive, 500);
+  document.getElementById("result-wrap").style.display = "none";
+  resetForm();
+}
+
+function resetForm() {
+  document.getElementById("sel-user").value = "";
+  ["v-temp","v-bps","v-bpd","v-pulse","v-spo2","v-weight","v-water","v-urine","v-activity","v-notes"].forEach(id => document.getElementById(id).value = "");
+  ["v-temp","v-bps","v-bpd","v-pulse","v-spo2","v-weight"].forEach(id => {
+    const d = document.getElementById(id+"-disp");
+    if(d){ d.textContent="--"; d.classList.remove("filled"); }
+  });
+  document.getElementById("v-stool").value = "";
+  ["morning","noon","evening"].forEach(m => { document.getElementById("m-"+m).value = 80; document.getElementById("mp-"+m).textContent = "80%"; });
+  document.getElementById("m-noon").value = 100; document.getElementById("mp-noon").textContent = "100%";
+  document.getElementById("result-wrap").style.display = "none";
+  window._currentRecord = null;
+}
+
+function copyResult() {
+  const text = document.getElementById("result-text").textContent;
+  navigator.clipboard.writeText(text).then(() => showToast("📋 コピーしました"));
+}
+
+function openRecord(idx) {
+  selectedRecordIdx = idx;
+  const r = records[idx];
+  document.getElementById("modal-title").textContent = r.userName + " 様の連絡帳";
+  document.getElementById("modal-date").textContent = r.date;
+  document.getElementById("modal-body").textContent = r.text;
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById("modal")) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById("modal").classList.remove("open");
+  selectedRecordIdx = null;
+}
+
+function deleteRecord() {
+  if (selectedRecordIdx === null) return;
+  records.splice(selectedRecordIdx, 1);
+  closeModalDirect();
+  renderRecords();
+  showToast("🗑 削除しました");
+}
+
+function toggleAddForm() {
+  document.getElementById("add-user-form").classList.toggle("open");
+}
+
+function addUser() {
+  const name = document.getElementById("new-name").value.trim();
+  const age = document.getElementById("new-age").value;
+  const note = document.getElementById("new-note").value.trim();
+  if (!name) { showToast("お名前を入力してください"); return; }
+  users.push({ id: nextUserId++, name, age: parseInt(age) || 0, note });
+  document.getElementById("new-name").value = "";
+  document.getElementById("new-age").value = "";
+  document.getElementById("new-note").value = "";
+  document.getElementById("add-user-form").classList.remove("open");
+  renderUsers();
+  renderUserSelects();
+  showToast("✅ " + name + "さんを追加しました");
+}
+
+function removeUser(idx) {
+  const name = users[idx].name;
+  if (!confirm(name + "さんを削除しますか？")) return;
+  users.splice(idx, 1);
+  renderUsers();
+  renderUserSelects();
+  showToast("削除しました");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+// Tenkey
+let tkTarget = null, tkUnit = '', tkDecimal = false, tkInput = '';
+
+function openTenkey(fieldId, title, unit, allowDecimal) {
+  tkTarget = fieldId;
+  tkUnit = unit;
+  tkDecimal = allowDecimal;
+  tkInput = document.getElementById(fieldId).value || '';
+  document.getElementById('tk-title').textContent = title;
+  document.getElementById('tk-unit').textContent = unit;
+  document.getElementById('tk-dot-btn').style.opacity = allowDecimal ? '1' : '0.3';
+  document.getElementById('tk-dot-btn').style.pointerEvents = allowDecimal ? 'auto' : 'none';
+  document.getElementById('tk-val').textContent = tkInput || '0';
+  document.getElementById('tk-overlay').classList.add('open');
+}
+
+function tkPress(key) {
+  if (key === '.' && !tkDecimal) return;
+  if (key === '.' && tkInput.includes('.')) return;
+  if (tkInput === '0' && key !== '.') tkInput = key;
+  else tkInput += key;
+  if (tkInput.length > 6) tkInput = tkInput.slice(0, 6);
+  document.getElementById('tk-val').textContent = tkInput || '0';
+}
+
+function tkDel() {
+  tkInput = tkInput.slice(0, -1);
+  document.getElementById('tk-val').textContent = tkInput || '0';
+}
+
+function tkConfirm() {
+  if (tkTarget && tkInput) {
+    document.getElementById(tkTarget).value = tkInput;
+    const disp = document.getElementById(tkTarget + '-disp');
+    disp.textContent = tkInput + ' ' + tkUnit;
+    disp.classList.add('filled');
+  }
+  closeTenkey();
+}
+
+function tkCancel() { closeTenkey(); }
+
+function tkOverlayClick(e) {
+  if (e.target === document.getElementById('tk-overlay')) closeTenkey();
+}
+
+function closeTenkey() {
+  document.getElementById('tk-overlay').classList.remove('open');
+  tkTarget = null; tkInput = '';
+}
+
+
+// ============ Google Drive 連携 ============
+const CLIENT_ID = '727543696675-jj10gd19643i225c8s0lf22q64mgi9j5.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const FILE_NAME = 'dayservice_data.json';
+
+let gdriveConnected = false;
+let accessToken = null;
+let driveFileId = null;
+
+function gdriveLogin() {
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('❌ 接続に失敗しました'); return; }
+      accessToken = resp.access_token;
+      gdriveConnected = true;
+      document.getElementById('gdrive-status').textContent = 'Google Driveに接続済み ✓';
+      document.getElementById('gdrive-status').className = 'gdrive-status connected';
+      document.getElementById('gdrive-btn').style.display = 'none';
+      document.getElementById('gdrive-sync-btn').style.display = 'flex';
+      showToast('✅ Google Driveに接続しました');
+      await loadFromDrive();
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function loadFromDrive() {
+  try {
+    document.getElementById('gdrive-status').textContent = '📥 データを読み込み中...';
+    document.getElementById('gdrive-status').className = 'gdrive-status syncing';
+
+    // Search for existing file in appDataFolder
+    const searchRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${FILE_NAME}'&fields=files(id,name)`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const searchData = await searchRes.json();
+
+    if (searchData.files && searchData.files.length > 0) {
+      driveFileId = searchData.files[0].id;
+      // Load file content
+      const fileRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const data = await fileRes.json();
+      if (data.users) { users = data.users; nextUserId = Math.max(...users.map(u=>u.id), 3) + 1; }
+      if (data.records) records = data.records;
+      renderUserSelects();
+      renderUsers();
+      renderRecords();
+      showToast('📥 データを読み込みました');
+    } else {
+      // No file yet, save current data
+      await syncToDrive();
+    }
+
+    document.getElementById('gdrive-status').textContent = 'Google Driveに接続済み ✓';
+    document.getElementById('gdrive-status').className = 'gdrive-status connected';
+  } catch(e) {
+    showToast('❌ 読み込みに失敗しました');
+    document.getElementById('gdrive-status').textContent = 'Google Driveに接続済み（同期エラー）';
+    document.getElementById('gdrive-status').className = 'gdrive-status connected';
+  }
+}
+
+async function syncToDrive() {
+  if (!gdriveConnected || !accessToken) { showToast('先にGoogle Driveに接続してください'); return; }
+  try {
+    document.getElementById('gdrive-status').textContent = '🔄 同期中...';
+    document.getElementById('gdrive-status').className = 'gdrive-status syncing';
+
+    const data = JSON.stringify({ users, records, updatedAt: new Date().toISOString() });
+    const blob = new Blob([data], { type: 'application/json' });
+
+    if (driveFileId) {
+      // Update existing file
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: blob
+      });
+    } else {
+      // Create new file in appDataFolder
+      const meta = JSON.stringify({ name: FILE_NAME, parents: ['appDataFolder'] });
+      const form = new FormData();
+      form.append('metadata', new Blob([meta], { type: 'application/json' }));
+      form.append('file', blob);
+      const createRes = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form }
+      );
+      const createData = await createRes.json();
+      driveFileId = createData.id;
+    }
+
+    document.getElementById('gdrive-status').textContent = 'Google Driveに接続済み ✓';
+    document.getElementById('gdrive-status').className = 'gdrive-status connected';
+    showToast('☁️ Google Driveに同期しました');
+  } catch(e) {
+    showToast('❌ 同期に失敗しました');
+    document.getElementById('gdrive-status').textContent = 'Google Driveに接続済み（同期エラー）';
+    document.getElementById('gdrive-status').className = 'gdrive-status connected';
+  }
+}
+
+// Auto sync after saving record
+const _origSaveRecord = saveRecord;
+
+</script>
+
+<!-- Tenkey modal -->
+<div class="tk-overlay" id="tk-overlay" onclick="tkOverlayClick(event)">
+  <div class="tk-modal">
+    <div class="tk-title" id="tk-title">体温</div>
+    <div class="tk-display"><span id="tk-val">0</span><span class="tk-unit" id="tk-unit">℃</span></div>
+    <div class="tk-keys">
+      <div class="tk-key" onclick="tkPress('7')">7</div>
+      <div class="tk-key" onclick="tkPress('8')">8</div>
+      <div class="tk-key" onclick="tkPress('9')">9</div>
+      <div class="tk-key" onclick="tkPress('4')">4</div>
+      <div class="tk-key" onclick="tkPress('5')">5</div>
+      <div class="tk-key" onclick="tkPress('6')">6</div>
+      <div class="tk-key" onclick="tkPress('1')">1</div>
+      <div class="tk-key" onclick="tkPress('2')">2</div>
+      <div class="tk-key" onclick="tkPress('3')">3</div>
+      <div class="tk-key tk-dot" id="tk-dot-btn" onclick="tkPress('.')">・</div>
+      <div class="tk-key" onclick="tkPress('0')">0</div>
+      <div class="tk-key tk-del" onclick="tkDel()">⌫</div>
+    </div>
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="tk-key" onclick="tkCancel()" style="font-size:15px;color:var(--text3);">キャンセル</div>
+      <div class="tk-key tk-ok" onclick="tkConfirm()">確定</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
