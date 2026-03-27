@@ -628,8 +628,19 @@ let nextUserId = 4;
 let selectedRecordIdx = null;
 let todayAttendees = new Set();
 
+// 出席データの保存・読み込み（日付が変わったら自動リセット）
+const _todayKey = new Date().toISOString().slice(0, 10);
+function saveAttendance() {
+  localStorage.setItem('attendance_' + _todayKey, JSON.stringify([...todayAttendees]));
+}
+function loadAttendance() {
+  const saved = localStorage.getItem('attendance_' + _todayKey);
+  if (saved) todayAttendees = new Set(JSON.parse(saved));
+}
+
 // Init
 document.getElementById("headerDate").textContent = new Date().toLocaleDateString("ja-JP", { year:"numeric", month:"long", day:"numeric", weekday:"short" });
+loadAttendance();
 renderUserSelects();
 renderUsers();
 renderRecords();
@@ -685,6 +696,7 @@ function renderAttendance() {
 function toggleAttendance(userId) {
   if (todayAttendees.has(userId)) todayAttendees.delete(userId);
   else todayAttendees.add(userId);
+  saveAttendance();
   renderAttendance();
   renderUserSelects();
 }
@@ -692,6 +704,7 @@ function toggleAttendance(userId) {
 function selectAllAttendance(all) {
   if (all) users.forEach(u => todayAttendees.add(u.id));
   else todayAttendees.clear();
+  saveAttendance();
   renderAttendance();
   renderUserSelects();
 }
